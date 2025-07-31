@@ -4,15 +4,6 @@ Spring Boot microservice for managing a movie database. This application provide
 
 ---
 
-
-## ✨ Features
-
--   🔹 **Full CRUD Functionality:** Create, Read, Update, and Delete movies.
--   🔹 **Database Migrations:** Uses Flyway to version control the database schema, ensuring consistency across all environments.
--   🔹 **RESTful by Design:** Follows REST principles for a predictable and standardized API.
-
----
-
 ## 🔧 Prerequisites
 
 Before you begin, ensure you have the following installed on your system:
