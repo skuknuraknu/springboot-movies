@@ -64,7 +64,8 @@ With the configuration in place, run the Flyway migrations to set up the databas
 Finally, start the Spring Boot application:
 
 ```bash
-./mvnw spring-boot:run
+./mvnw spring-boot:run -pl gateway
+./mvnw spring-boot:run -pl movie-service
 ```
 
 The application will be running on `http://localhost:8080`.
