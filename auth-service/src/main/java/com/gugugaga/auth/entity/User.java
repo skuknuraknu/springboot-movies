@@ -1,23 +1,40 @@
 package com.gugugaga.auth.entity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "tb_users")
 public class User {
-    @Id @GeneratedValue( strategy = GenerationType.IDENTITY )
-    private long id;
+    
+    @Id 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank(message = "Harap memasukkan email")
+    @Email(message = "Format email tidak valid")
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
     @NotBlank(message = "Harap memasukkan username")
+    @Size(min = 3, max = 100, message = "Username harus antara 3-100 karakter")
+    @Column(name = "username", nullable = false)
     private String username;
 
     @NotBlank(message = "Harap memasukkan password")
+    @Size(min = 6, message = "Password minimal 6 karakter")
+    @Column(name = "password", nullable = false)
+    @JsonIgnore // Exclude from JSON serialization
     private String password;
 
     @Column(name = "is_active")
@@ -38,11 +55,14 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
-    public long getId() {
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserRole> userRoles = new HashSet<>();
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -117,4 +137,13 @@ public class User {
     public void setLastLoginAt(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
     }
+
+    public Set<UserRole> getUserRoles() {
+        return userRoles;
+    }
+
+    public void setUserRoles(Set<UserRole> userRoles) {
+        this.userRoles = userRoles;
+    }
+
 }
