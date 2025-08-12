@@ -12,29 +12,29 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
-@Table(name = "tb_users")
+@Table(name = "tb_users",
+    uniqueConstraints = {
+        @UniqueConstraint(name="uk_users_email", columnNames = "email"),
+        @UniqueConstraint(name="uk_users_username", columnNames = "username")
+    }
+)
 public class User {
     
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Harap memasukkan email")
-    @Email(message = "Format email tidak valid")
     @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @NotBlank(message = "Harap memasukkan username")
-    @Size(min = 3, max = 100, message = "Username harus antara 3-100 karakter")
     @Column(name = "username", nullable = false)
     private String username;
 
-    @NotBlank(message = "Harap memasukkan password")
-    @Size(min = 6, message = "Password minimal 6 karakter")
     @Column(name = "password", nullable = false)
-    @JsonIgnore // Exclude from JSON serialization
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "is_active")
