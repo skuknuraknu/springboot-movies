@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 
 @Embeddable
 public class UserRoleId implements Serializable {
-    
     @Column(name = "user_id")
     private Long userId;
     
