@@ -8,11 +8,10 @@ import java.util.Set;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "tb_roles")
+@Table(name = "tb_roles", uniqueConstraints = @UniqueConstraint(name = "uk_roles_name", columnNames = "name"))
 public class Role {
     
     @Id 
