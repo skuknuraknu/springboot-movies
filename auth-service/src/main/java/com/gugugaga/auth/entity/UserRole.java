@@ -9,16 +9,17 @@ import jakarta.validation.constraints.NotBlank;
 @Entity
 @Table(name = "tb_user_roles")
 public class UserRole implements Serializable {
+    @EmbeddedId
     private UserRoleId id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
-    @Column(name = "user_id")
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("roleId")
-    @Column(name = "role_id")
+    @JoinColumn(name = "role_id")
     private Role role;
 
     @Column(name = "assigned_at", updatable = false)
