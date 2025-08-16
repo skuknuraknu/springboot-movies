@@ -1,15 +1,4 @@
 package com.gugugaga.auth.dto;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gugugaga.auth.entity.UserRole;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.*;
 
 public class CreateUserRequest {
