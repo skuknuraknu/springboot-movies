@@ -59,6 +59,11 @@
         <version>3.5.4</version>
       </dependency>
       <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>3.5.4</version>
+      </dependency>
+      <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
         <version>4.3.0</version>
@@ -99,6 +104,11 @@
         <artifactId>spring-security-test</artifactId>
         <version>6.5.2</version>
       </dependency>
+      <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct</artifactId>
+        <version>1.6.3</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
@@ -117,6 +127,22 @@
             <user>postgres</user>
             <password>makangratis</password>
           </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.11.0</version>
+            <configuration>
+                <source>17</source> <!-- or your Java version -->
+                <target>17</target>
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.mapstruct</groupId>
+                        <artifactId>mapstruct-processor</artifactId>
+                        <version>1.6.3</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
