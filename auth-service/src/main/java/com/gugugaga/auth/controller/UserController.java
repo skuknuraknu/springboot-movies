@@ -3,8 +3,10 @@ package com.gugugaga.auth.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gugugaga.auth.dto.CreateUserRequest;
 import com.gugugaga.auth.dto.UpdateUserRequest;
 import com.gugugaga.auth.entity.User;
+import com.gugugaga.auth.mapper.UserMapper;
 import com.gugugaga.auth.service.UserService;
 
 import jakarta.validation.Valid;
@@ -12,6 +14,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,23 +25,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
 
-
-
 @RestController
 @RequestMapping("/api/auth")
 public class UserController {
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public UserController( UserService userService) {
         this.userService = userService;
     }
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user ) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest req ) {
         try {
-            userService.findValidationError(user).ifPresent(errorMessage -> {
+            userService.findValidationError(req).ifPresent(errorMessage -> {
                 throw new IllegalArgumentException(errorMessage);
             });
-            User createdUser = userService.createUser(user);
+            User createdUser = userService.createUser(req);
             URI location = URI.create("/api/auth/register" + createdUser.getId());
             return ResponseEntity.created(location).body(Map.of(
                     "success", true,
@@ -74,9 +75,9 @@ public class UserController {
         try {
             User updatedUser = userService.updateUser(id, req, id);
             return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Berhasil memperbarui user",
-                    "data", updatedUser
+                "success", true,
+                "message", "Berhasil memperbarui user",
+                "data", updatedUser
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
