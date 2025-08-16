@@ -72,13 +72,3 @@ The application will be running on `http://localhost:8080`.
 
 ---
 
-## 🔌 API Endpoints
-
-The primary endpoint for interacting with movie data is `/api/movies`.
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/movies` | Retrieves a list of all movies. |
-| `GET` | `/api/movies/{id}` | Retrieves a single movie by its ID. |
-| `POST` | `/api/movies` | Creates a new movie. |
-| `DELETE`| `/api/movies/{id}` | Deletes a movie by its ID. |
