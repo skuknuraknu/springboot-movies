@@ -3,10 +3,9 @@ package com.gugugaga.auth.dto;
 import jakarta.validation.constraints.*;
 
 public class UpdateUserRequest {
-    @NotBlank(message = "Harap memasukkan username")
+    @Size(min = 8, message = "Username minimal 8 karakter")
     private String username;
 
-    @NotBlank(message = "Harap memasukkan email")
     @Email(message = "Format email tidak valid")
     private String email;
 
