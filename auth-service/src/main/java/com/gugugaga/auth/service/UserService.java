@@ -1,12 +1,18 @@
 package com.gugugaga.auth.service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+
+import org.apache.coyote.Response;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.*;
 import org.springframework.stereotype.Service;
 
 import com.gugugaga.auth.dto.CreateUserRequest;
 import com.gugugaga.auth.dto.UpdateUserRequest;
+import com.gugugaga.auth.entity.Role;
 import com.gugugaga.auth.entity.User;
 import com.gugugaga.auth.mapper.UserMapper;
 import com.gugugaga.auth.repository.UserRepository;
@@ -65,4 +71,9 @@ public class UserService {
         }
         return Optional.empty();
     }
-} 
+    public List<User> findUserWithRolesById( Long id ) {
+        User user = userRepository.findByIdAndIsActiveTrue(id).orElseThrow(() -> new IllegalArgumentException("User dengan id " + id + " tidak ditemukan."));
+        return List.of(user);
+    }
+}
+ 

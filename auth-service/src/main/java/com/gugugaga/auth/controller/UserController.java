@@ -12,6 +12,7 @@ import com.gugugaga.auth.service.UserService;
 import jakarta.validation.Valid;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,24 @@ public class UserController {
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
                     "message", "Terjadi kesalahan saat memperbarui user",
+                    "error", e.getMessage()
+            ));
+        }
+    }
+    
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
+        try {
+            List<User> user = userService.findUserWithRolesById(id);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "User found",
+                "data", user
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Terjadi kesalahan saat mengambil user",
                     "error", e.getMessage()
             ));
         }
