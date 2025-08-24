@@ -66,6 +66,7 @@ Finally, start the Spring Boot application:
 ```bash
 ./mvnw spring-boot:run -pl gateway
 ./mvnw spring-boot:run -pl movie-service
+./mvnw spring-boot:run -pl auth-service
 ```
 
 The application will be running on `http://localhost:8080`.
