@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // find only user that is active
     Optional<User> findByIdAndIsActiveTrue(Long id);
     Optional<User> findByUsernameIgnoreCaseAndIsActiveTrue(String username);
-    // Add this method with JOIN FETCH to load roles eagerly
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.userRoles ur LEFT JOIN FETCH ur.role WHERE u.username = :username AND u.isActive = true")
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.userRoles ur LEFT JOIN FETCH ur.role WHERE LOWER(u.username) = LOWER(:username)")
     Optional<User> findByUsernameWithRoles(@Param("username") String username);
 }

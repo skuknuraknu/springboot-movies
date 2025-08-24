@@ -99,8 +99,8 @@ public class UserService implements UserDetailsService {
     }
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Fetch user entity from DB with roles
-        User user = userRepository.findByUsernameIgnoreCase(username)
+        // Use the repository method that fetches roles eagerly
+        User user = userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         // Convert roles to authorities
@@ -115,12 +115,15 @@ public class UserService implements UserDetailsService {
         
         System.out.println("Loaded authorities for " + username + ": " + authorities);
 
-        // Return Spring Security's User object (correct syntax)
         return new org.springframework.security.core.userdetails.User(
             user.getUsername(),
             user.getPassword(),
-            authorities  // Pass SimpleGrantedAuthority list, not Role objects
+            authorities
         );
+    }
+    public User findByUsername(String username) {
+        return userRepository.findByUsernameIgnoreCase(username)
+            .orElseThrow(() -> new IllegalArgumentException("User with username " + username + " not found"));
     }
 }
 
