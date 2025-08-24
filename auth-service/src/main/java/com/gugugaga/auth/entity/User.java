@@ -12,15 +12,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "tb_users",
-    uniqueConstraints = {
-        @UniqueConstraint(name="uk_users_email", columnNames = "email"),
-        @UniqueConstraint(name="uk_users_username", columnNames = "username")
-    }
+uniqueConstraints = {
+    @UniqueConstraint(name="uk_users_email", columnNames = "email"),
+    @UniqueConstraint(name="uk_users_username", columnNames = "username")
+}
 )
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     
     @Id 
@@ -56,7 +58,15 @@ public class User {
     private LocalDateTime lastLoginAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<UserRole> userRoles = new HashSet<>();
+
+    public Set<Role> getRoles() {
+        return userRoles.stream()
+            .map(UserRole::getRole)
+            .collect(Collectors.toSet());
+    }
+    
 
     public Long getId() {
         return id;
