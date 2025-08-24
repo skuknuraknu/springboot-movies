@@ -45,10 +45,9 @@ cp auth-service/src/main/resources/application.yml.example auth-service/src/main
 
 ### 4. Start Services
 ```bash
-# Start in separate terminals or background
-./mvnw spring-boot:run -pl gateway      # Port 8080 - API Gateway
-./mvnw spring-boot:run -pl movie-service # Port 8081 - Movie APIs  
-./mvnw spring-boot:run -pl auth-service  # Port 8082 - Auth APIs
+./mvnw spring-boot:run -pl gateway
+./mvnw spring-boot:run -pl movie-service
+./mvnw spring-boot:run -pl auth-service
 ```
 
 **Access**: All APIs available through Gateway at `http://localhost:8080`
