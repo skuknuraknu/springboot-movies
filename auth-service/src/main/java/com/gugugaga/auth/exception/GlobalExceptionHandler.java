@@ -54,4 +54,5 @@ public class GlobalExceptionHandler {
                 ));
         return respond(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
     }
+    
 }
