@@ -1,0 +1,1 @@
+ALTER TABLE tb_movies ADD COLUMN deleted_at TIMESTAMP NULL;
