@@ -17,6 +17,7 @@ import com.gugugaga.auth.service.UserService;
 import jakarta.validation.Valid;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,58 +104,22 @@ public class UserController {
         }
     }
     
-    @PostMapping("/login")
-    public ResponseEntity<?> login( @Valid @RequestBody AuthRequest req ) {
-        try {
-            authenticationManager.authenticate( new UsernamePasswordAuthenticationToken( req.getUsername(), req.getPassword()));
-            UserDetails userDetails = userService.loadUserByUsername(req.getUsername());
-            String token = jwtUtil.generateToken(userDetails);
-            return ResponseEntity.status(200).body( Map.of(
-                 "success", true,
-                "message", "Berhasil login",
-                "token", token
-            ));
-        } catch ( Exception e ) {
-            return ResponseEntity.status(500).body( Map.of(
-                 "success", false,
-                "message", "Terjadi kesalahan saat login",
-                "error", e.getMessage()
-            ));
-        }
-    }
-    
     @GetMapping("/get/{id}")
-    public ResponseEntity<?> getUserById( @PathVariable Long id ) {
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
         try {
-            User user = userService.findById(id);
+            List<User> user = userService.findUserWithRolesById(id);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Berhasil mendapatkan user",
+                "message", "User found",
                 "data", user
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Terjadi kesalahan saat mendapatkan user",
-                "error", e.getMessage()
+                    "success", false,
+                    "message", "Terjadi kesalahan saat mengambil user",
+                    "error", e.getMessage()
             ));
         }
     }
     
-    @PostMapping("/assignRoles/{id}")
-    public ResponseEntity<?> assignRole( @PathVariable Long id, @Valid @RequestBody AssignRoleRequest req ) {
-        try {
-            userService.assignRolesToUser(id, req);
-            return ResponseEntity.status(201).body(Map.of(
-                "success", true,
-                "message", "Berhasil memberikan role"
-            ));
-        } catch ( Exception e ) {
-            return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Terjadi kesalahan saat memberikan peran",
-                "error", e.getMessage()
-            ));
-        }
-    }
 }

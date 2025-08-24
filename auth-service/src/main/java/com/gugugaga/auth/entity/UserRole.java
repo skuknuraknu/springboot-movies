@@ -2,22 +2,27 @@ package com.gugugaga.auth.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_user_roles")
-public class UserRole implements Serializable {
-
+public class UserRole {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // must exist
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    
+    @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "role_id")
     private Role role;
 
@@ -32,7 +37,6 @@ public class UserRole implements Serializable {
         this.role = role;
         this.assignedAt = LocalDateTime.now();
     }
-    // Add this getter method if it's missing
     public Role getRole() {
         return role;
     }

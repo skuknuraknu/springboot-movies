@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
@@ -22,11 +22,9 @@ uniqueConstraints = {
     @UniqueConstraint(name="uk_users_username", columnNames = "username")
 }
 )
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "email", unique = true, nullable = false)
@@ -58,16 +56,17 @@ public class User {
     private LocalDateTime lastLoginAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     @JsonIgnore
     private Set<UserRole> userRoles = new HashSet<>();
 
     public Set<Role> getRoles() {
-        return userRoles.stream()
-            .map(UserRole::getRole)
-            .collect(Collectors.toSet());
+        Set<Role> roles = new HashSet<>();
+        for( UserRole ur : userRoles ) {
+            roles.add( ur.getRole() );
+        }
+        return roles;
     }
-    
-
     public Long getId() {
         return id;
     }
@@ -154,6 +153,12 @@ public class User {
 
     public void setUserRoles(Set<UserRole> userRoles) {
         this.userRoles = userRoles;
+    }
+
+    public void addRole( Role role, String assignedBy ) {
+        UserRole userRole = new UserRole(this, role );
+        userRoles.add(userRole);
+        role.getUserRoles().add(userRole);
     }
 
 }

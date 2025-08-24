@@ -1,21 +1,23 @@
 package com.gugugaga.auth.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import com.gugugaga.auth.entity.Role;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 public class AssignRoleRequest {
-    @NotEmpty(message = "Roles tidak boleh kosong.")
-    private List<Long> roles;  // or Set<Role>
+    @NotNull(message = "Role IDs list is required")
+    @NotEmpty(message = "Role IDs cannot be empty")
+    private List<Long> roleIds;
 
-    public List<Long> getRoles() {
-        return roles;
+    public List<Long> getRoleIds() {
+        return roleIds;
     }
 
-    public void setRoles(List<Long> roles) {
-        this.roles = roles;
+    public void setRoleIds(List<Long> roleIds) {
+        this.roleIds = roleIds;
     }
+    
 }
-
