@@ -1,74 +1,81 @@
-# Movie App API 🎬
+# Movie Backend - Spring Boot Microservices 🎬
 
-Spring Boot microservice for managing a movie database. This application provides a full suite of CRUD (Create, Read, Update, Delete) operations through a RESTful API and uses **Flyway** for seamless database schema management and version control.
+A modern microservices architecture for managing a movie database built with Spring Boot 3 and PostgreSQL. Features JWT authentication, Spring Cloud Gateway routing, and automated database migrations.
 
----
+## 🏗️ Architecture
+
+- **Gateway Service** (8080) - Spring Cloud Gateway for request routing and CORS
+- **Movie Service** (8081) - Movie CRUD operations with PostgreSQL database  
+- **Auth Service** (8082) - JWT-based authentication and user management
 
 ## 🔧 Prerequisites
 
-Before you begin, ensure you have the following installed on your system:
+- **Java 17+**
+- **Maven 3.6+** 
+- **PostgreSQL** (any recent version)
+- **Git CLI**
 
--   **Java:** Version `17` or higher.
--   **Maven:** Version `3.6+` or higher.
--   **Git CLI:** For cloning and managing the source code.
--   **PostgreSQL:** Version `17` or higher, running and accessible.
+## 🚀 Quick Start
 
----
-
-## 🚀 Installation & Setup
-
-Follow these steps to get the application running on your local machine.
-
-### 1. Clone the Repository
-
-Open your terminal and clone the project repository:
-
+### 1. Clone & Build
 ```bash
 git clone https://github.com/skuknuraknu/springboot-movies.git
 cd springboot-movies
-```
-
-### 2. Build the Project
-
-Use the Maven wrapper to compile the source code and download dependencies:
-
-```bash
 ./mvnw clean install
 ```
 
-### 3. Configure Local Environment for Movie Service
-
-You need to set up your database connection properties for your local environment.
-
--   Copy the local properties template to create your own configuration file:
-    ```bash
-    cp movie-service/src/main/resources/application-local.properties.example movie-service/src/main/resources/application.properties
-    ```
--   Now, open `movie-service/src/main/resources/application.properties` and update the following datasource properties with your PostgreSQL credentials:
-    ```properties
-    spring.datasource.url=jdbc:postgresql://localhost:5432/your_database_name
-    spring.datasource.username=your_postgres_username
-    spring.datasource.password=your_postgres_password
-    ```
-
-### 4. Run Database Migrations
-
-With the configuration in place, run the Flyway migrations to set up the database schema:
-
+### 2. Setup Configuration
+Copy example configurations and update credentials:
 ```bash
+# Copy configuration templates
+cp gateway/src/main/resources/application.yml.example gateway/src/main/resources/application.yml
+cp movie-service/src/main/resources/application.yml.example movie-service/src/main/resources/application.yml  
+cp auth-service/src/main/resources/application.yml.example auth-service/src/main/resources/application.yml
+
+# Update database credentials in each application.yml file
+# Update JWT secret in auth-service/src/main/resources/application.yml
+```
+
+### 3. Setup Database & Migrate
+```bash
+# Create PostgreSQL database named 'movieapp'
+# Run migrations for all services
 ./mvnw flyway:migrate
 ```
 
-### 5. Run the Application
-
-Finally, start the Spring Boot application:
-
+### 4. Start Services
 ```bash
-./mvnw spring-boot:run -pl gateway
-./mvnw spring-boot:run -pl movie-service
+# Start in separate terminals or background
+./mvnw spring-boot:run -pl gateway      # Port 8080 - API Gateway
+./mvnw spring-boot:run -pl movie-service # Port 8081 - Movie APIs  
+./mvnw spring-boot:run -pl auth-service  # Port 8082 - Auth APIs
 ```
 
-The application will be running on `http://localhost:8080`.
+**Access**: All APIs available through Gateway at `http://localhost:8080`
 
----
+## 📡 API Endpoints
+
+All requests go through the Gateway at `http://localhost:8080`:
+
+- **Movies**: `/api/movies/**` → Movie Service (CRUD operations)
+- **Authentication**: `/api/auth/**` → Auth Service (login, register, JWT)
+
+## 🛠️ Technology Stack
+
+- **Framework**: Spring Boot 3.5.4 with Spring Cloud Gateway
+- **Database**: PostgreSQL with Flyway migrations  
+- **Security**: Spring Security + JWT (JJWT library)
+- **Build**: Maven multi-module project
+- **Testing**: JUnit Jupiter
+
+## 📁 Project Structure
+
+```
+movie-backend/
+├── gateway/           # Spring Cloud Gateway (Port 8080)
+├── movie-service/     # Movie CRUD APIs (Port 8081) 
+├── auth-service/      # Authentication APIs (Port 8082)
+├── pom.xml           # Parent POM with shared dependencies
+```
+
 
