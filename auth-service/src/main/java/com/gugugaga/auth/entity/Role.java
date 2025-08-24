@@ -6,12 +6,14 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_roles", uniqueConstraints = @UniqueConstraint(name = "uk_roles_name", columnNames = "name"))
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Role {
     
     @Id 

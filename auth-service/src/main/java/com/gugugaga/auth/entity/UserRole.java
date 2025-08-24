@@ -6,11 +6,13 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_user_roles")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class UserRole {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // must exist

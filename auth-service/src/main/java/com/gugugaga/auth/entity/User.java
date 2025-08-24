@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -22,6 +23,7 @@ uniqueConstraints = {
     @UniqueConstraint(name="uk_users_username", columnNames = "username")
 }
 )
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
