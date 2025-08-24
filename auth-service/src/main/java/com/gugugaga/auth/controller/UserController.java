@@ -23,8 +23,10 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -122,4 +124,60 @@ public class UserController {
         }
     }
     
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            // Authenticate the user
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    authRequest.getUsername(), 
+                    authRequest.getPassword()
+                )
+            );
+            
+            // Load user details
+            UserDetails userDetails = userService.loadUserByUsername(authRequest.getUsername());
+            
+            // Generate JWT token
+            String token = jwtUtil.generateToken(userDetails);
+            
+            // Get user entity for additional info
+            User user = userService.findByUsername(authRequest.getUsername());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Login successful",
+                "data", Map.of(
+                    "token", token,
+                    "tokenType", "Bearer",
+                    "user", Map.of(
+                        "id", user.getId(),
+                        "username", user.getUsername(),
+                        "email", user.getEmail(),
+                        "isActive", user.getIsActive()
+                    )
+                )
+            ));
+            
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(Map.of(
+                "success", false,
+                "message", "Invalid username or password",
+                "error", "Authentication failed"
+            ));
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of(
+                "success", false,
+                "message", "User not found",
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "An error occurred during login",
+                "error", e.getMessage()
+            ));
+        }
+    }
+
 }
