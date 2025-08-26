@@ -22,7 +22,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
-    public SecurityConfig( JwtUtil jwtUtil, UserDetailsService userDetailsService ) {
+    public SecurityConfig( JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
     }
