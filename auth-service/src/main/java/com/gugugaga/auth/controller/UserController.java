@@ -6,12 +6,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gugugaga.auth.dto.AssignRoleRequest;
 import com.gugugaga.auth.dto.AuthRequest;
 import com.gugugaga.auth.dto.CreateUserRequest;
+import com.gugugaga.auth.dto.RefreshTokenRequest;
 import com.gugugaga.auth.dto.UpdateUserRequest;
+import com.gugugaga.auth.entity.RefreshToken;
 import com.gugugaga.auth.entity.Role;
 import com.gugugaga.auth.entity.User;
 import com.gugugaga.auth.entity.UserRole;
 import com.gugugaga.auth.mapper.UserMapper;
 import com.gugugaga.auth.service.JwtUtil;
+import com.gugugaga.auth.service.RefreshTokenService;
 import com.gugugaga.auth.service.UserService;
 
 import jakarta.validation.Valid;
@@ -33,6 +36,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PutMapping;
 
 
@@ -43,6 +47,8 @@ public class UserController {
     private final JwtUtil jwtUtil;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     public UserController( UserService userService, JwtUtil jwtUtil ) {
         this.userService = userService;
@@ -128,19 +134,15 @@ public class UserController {
     public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
         try {
             // Authenticate the user
-            authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    authRequest.getUsername(), 
-                    authRequest.getPassword()
-                )
-            );
+            authenticationManager.authenticate( new UsernamePasswordAuthenticationToken( authRequest.getUsername(),  authRequest.getPassword() ) );
             
             // Load user details
             UserDetails userDetails = userService.loadUserByUsername(authRequest.getUsername());
             
             // Generate JWT token
             String token = jwtUtil.generateToken(userDetails);
-            
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken( authRequest.getUsername() );
+
             // Get user entity for additional info
             User user = userService.findByUsername(authRequest.getUsername());
             
@@ -149,6 +151,7 @@ public class UserController {
                 "message", "Login successful",
                 "data", Map.of(
                     "token", token,
+                    "refreshToken", refreshToken.getToken(),
                     "tokenType", "Bearer",
                     "user", Map.of(
                         "id", user.getId(),
@@ -179,5 +182,52 @@ public class UserController {
             ));
         }
     }
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+        try {
+            String requestRefreshToken = request.getRefreshToken();
+            
+            // Find the refresh token
+            RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken).orElseThrow(() -> new RuntimeException("Refresh token not found"));
+            
+            // Verify expiration
+            refreshToken = refreshTokenService.verifyExpiration(refreshToken);
+            
+            // Generate new access token
+            String accessToken = jwtUtil.generateAccessTokenFromRefreshToken(refreshToken);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Token refreshed successfully", 
+                "data", Map.of(
+                    "accessToken", accessToken,
+                    "refreshToken", requestRefreshToken,
+                    "tokenType", "Bearer"
+                )
+            ));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of(
+                "success", false,
+                "message", "Token refresh failed",
+                "error", e.getMessage()
+            ));
+        }
+    }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(@RequestHeader("Authorization") String token) {
+        // Extract username from token
+        String jwt = token.substring(7); // Remove "Bearer " prefix
+        String username = jwtUtil.extractUsername(jwt);
+        
+        // Delete refresh token from database
+        User user = userService.findByUsername(username);
+        refreshTokenService.deleteByUserId(user.getId());
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "User logged out successfully"
+        ));
+    }
 }
