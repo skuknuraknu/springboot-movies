@@ -1,6 +1,8 @@
 package com.gugugaga.auth.filter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,20 +12,32 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.gugugaga.auth.dto.ErrorResponse;
 import com.gugugaga.auth.service.JwtUtil;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Component
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    
 
-    // Add this constructor
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
@@ -40,9 +54,14 @@ public class JwtFilter extends OncePerRequestFilter {
         System.out.println("JWT Filter - Processing request: " + request.getRequestURI());
         System.out.println("JWT Filter - Authorization header: " + authHeader);
         
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("JWT Filter - No valid Authorization header found");
+        // Skip JWT validation for public endpoints
+        if (isPublicEndpoint(request.getRequestURI())) {
             filterChain.doFilter(request, response);
+            return;
+        }
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            handleAuthenticationError(request, response, "Missing or invalid Authorization header");
             return;
         }
         
@@ -69,14 +88,58 @@ public class JwtFilter extends OncePerRequestFilter {
                     
                     System.out.println("JWT Filter - Authentication set successfully");
                 } else {
-                    System.out.println("JWT Filter - Token validation failed");
+                    handleAuthenticationError(request, response, "Invalid or expired token");
+                    return;
                 }
             }
+        } catch (ExpiredJwtException e) {
+            System.err.println("JWT Filter - Token expired: " + e.getMessage());
+            handleAuthenticationError(request, response, "Token has expired");
+            return;
+        } catch (MalformedJwtException e) {
+            System.err.println("JWT Filter - Malformed token: " + e.getMessage());
+            handleAuthenticationError(request, response, "Malformed JWT token");
+            return;
+        } catch (SignatureException e) {
+            System.err.println("JWT Filter - Invalid signature: " + e.getMessage());
+            handleAuthenticationError(request, response, "Invalid JWT signature");
+            return;
+        } catch (JwtException e) {
+            System.err.println("JWT Filter - JWT error: " + e.getMessage());
+            handleAuthenticationError(request, response, "JWT processing error: " + e.getMessage());
+            return;
         } catch (Exception e) {
-            System.err.println("JWT Filter - Error processing token: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("JWT Filter - General error: " + e.getMessage());
+            handleAuthenticationError(request, response, "Token validation failed");
+            return;
         }
         
         filterChain.doFilter(request, response);
     }
+    
+    private boolean isPublicEndpoint(String uri) {
+        return uri.equals("/api/auth/login") || uri.equals("/api/auth/register");
+    }
+    
+    private void handleAuthenticationError(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
+        Map<String, String> errors = Map.of("error", message);
+        objectMapper.registerModule( new JavaTimeModule());
+        objectMapper.disable( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+
+        ErrorResponse errorResponse2 = new ErrorResponse(
+            Instant.now(),
+            HttpStatus.UNAUTHORIZED.value(),
+            "Authentication failed",
+            "Unauthorized",
+            request.getRequestURI(),
+            errors
+        );
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse2);
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
+    }
+        
 }
