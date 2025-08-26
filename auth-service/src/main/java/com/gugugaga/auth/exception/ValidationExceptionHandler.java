@@ -1,6 +1,7 @@
 package com.gugugaga.auth.exception;
 
 import java.net.URI;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -23,7 +24,7 @@ public class ValidationExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest req) {
         Map<String, String> errors = new HashMap<>(); 
         ex.getBindingResult().getFieldErrors().forEach( error -> errors.put( error.getField(), error.getDefaultMessage()));
-        OffsetDateTime timestamps = OffsetDateTime.now();
+        Instant timestamps = Instant.now();
         String location = req.getRequestURI();
         ErrorResponse response = new ErrorResponse(
             timestamps, 400, "Validation Failed", "VALIDATION_ERROR", location, errors
@@ -40,7 +41,7 @@ public class ValidationExceptionHandler {
         }
 
         ErrorResponse error = new ErrorResponse(
-            OffsetDateTime.now(),
+            Instant.now(),
             HttpStatus.CONFLICT.value(),
             "Database Error",
             message,
