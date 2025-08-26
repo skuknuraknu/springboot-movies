@@ -26,6 +26,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +38,12 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
+    private static final Map<String, Set<String>> PUBLIC_ENDPOINTS = Map.of(
+        "/api/auth/login", Set.of("POST"),
+        "/api/auth/register", Set.of("POST"),
+        "/api/auth/refresh", Set.of("GET", "POST") // support both if needed
+    );
+
 
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -53,12 +60,6 @@ public class JwtFilter extends OncePerRequestFilter {
         
         System.out.println("JWT Filter - Processing request: " + request.getRequestURI());
         System.out.println("JWT Filter - Authorization header: " + authHeader);
-        
-        // Skip JWT validation for public endpoints
-        if (isPublicEndpoint(request.getRequestURI())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             handleAuthenticationError(request, response, "Missing or invalid Authorization header");
@@ -116,11 +117,15 @@ public class JwtFilter extends OncePerRequestFilter {
         
         filterChain.doFilter(request, response);
     }
-    
-    private boolean isPublicEndpoint(String uri) {
-        return uri.equals("/api/auth/login") || uri.equals("/api/auth/register");
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path   = request.getServletPath();
+        String method = request.getMethod();
+
+        return PUBLIC_ENDPOINTS.containsKey(path) && PUBLIC_ENDPOINTS.get(path).contains(method);
     }
-    
+
     private void handleAuthenticationError(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
         Map<String, String> errors = Map.of("error", message);
         objectMapper.registerModule( new JavaTimeModule());

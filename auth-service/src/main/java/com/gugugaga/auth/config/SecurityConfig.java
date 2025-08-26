@@ -39,8 +39,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
         http.csrf( csrf -> csrf.disable() )
             .sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) 
-            ).authorizeHttpRequests( auth -> auth.requestMatchers("/api/auth/login", "/api/auth/register").permitAll().anyRequest().authenticated() 
-        ).authenticationProvider(daoAuthenticationProvider(passwordEncoder))
+            ).authenticationProvider(daoAuthenticationProvider(passwordEncoder))
         .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
