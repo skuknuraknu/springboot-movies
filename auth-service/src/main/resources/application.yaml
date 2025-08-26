@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8085
 spring:
   application:
     name: auth-service
@@ -9,14 +9,14 @@ spring:
     password: makangratis
     driver-class-name: org.postgresql.Driver
     hikari:
-      connection-timeout: 20000 # Maximum time to wait for a connection from the pool ( 20 seconds )
-      maximum-pool-size: 10 # Maximum number of connections in the pool
-      minimum-idle: 5 # Minimum number of idle connections maintained
-      idle-timeout: 300000 # Maximum time a connection can sit idle ( 5 min )
-      max-lifetime: 1200000 # Maximum lifetime of a connection in the pool ( 20 min )
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: none  # Change back to none when using Flyway
     show-sql: true
     properties:
       hibernate:
@@ -24,7 +24,30 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
     enabled: true
-    locations: db/migration
-    clean-disabled: false
+    table: flyway_schema_history_auth
+    locations: classpath:db/migrations
+    baseline-on-migrate: true
+    validate-on-migrate: false  # Change to false initially
+    clean-disabled: false  # Change to false for development
+    baseline-version: 1
+    encoding: UTF-8
+    placeholder-replacement: false
+
+# Add logging to see what's happening
+logging:
+  level:
+    org.flywaydb: DEBUG
+    org.springframework.boot.autoconfigure.flyway: DEBUG
+
+jwt:
+  secret: your-secret-key-here-make-it-long-and-random
+  access:
+    expiration: 900000 # 15 minutes
+  refresh:
+    expiration: 604800000 # 7 days
+    rotation:
+      enabled: true
+      max-rotations: 5
