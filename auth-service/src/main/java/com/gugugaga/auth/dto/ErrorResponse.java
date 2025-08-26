@@ -1,10 +1,11 @@
 package com.gugugaga.auth.dto;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 public record ErrorResponse (
-    OffsetDateTime timestamps,
+    Instant timeInstant,
     int status,
     String error, // short title error
     String message,
