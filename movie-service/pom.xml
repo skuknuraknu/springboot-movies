@@ -21,10 +21,9 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
-    <!-- Database migration -->
     <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <!-- Postgres driver -->
     <dependency>
@@ -33,7 +32,15 @@
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
     <!-- Bean validation -->
     <dependency>
@@ -46,17 +53,6 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- WebFlux stack -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-webflux</artifactId>
-    </dependency>
-
-    <!-- Reactive Gateway starter (the only gateway dep you need) -->
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
@@ -67,10 +63,21 @@
 
   <build>
     <plugins>
-      <!-- No need for explicit plugin here unless you want overrides -->
       <plugin>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-maven-plugin</artifactId>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <configuration>
+          <url>jdbc:postgresql://localhost:5432/movieapp</url>
+          <user>postgres</user>
+          <password>makangratis</password>
+          <locations>
+            <location>classpath:db/migrations</location>
+          </locations>
+          <table>flyway_schema_history_movie</table>
+          <cleanDisabled>false</cleanDisabled>
+          <baselineOnMigrate>true</baselineOnMigrate>
+          <validateOnMigrate>false</validateOnMigrate>
+        </configuration>
       </plugin>
     </plugins>
   </build>
