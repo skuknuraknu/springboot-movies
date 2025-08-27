@@ -18,14 +18,14 @@
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
     <!-- Postgres driver -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -77,4 +77,21 @@
         <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <configuration>
+          <url>jdbc:postgresql://localhost:5432/movieapp</url>
+          <user>postgres</user>
+          <password>makangratis</password>
+          <locations>classpath:db/migrations</locations>
+          <baselineOnMigrate>true</baselineOnMigrate>
+          <table>flyway_schema_history_auth</table>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
