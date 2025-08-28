@@ -1,7 +1,6 @@
 package com.gugugaga.gateway.config;
 
 import com.gugugaga.gateway.filter.JwtFilter;
-import com.gugugaga.gateway.filter.JwtFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -21,17 +20,33 @@ public class SecurityConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-            // Auth Service Routes (no JWT validation needed)
-            .route("auth-service", r -> r.path("/api/auth/login", "/api/auth/register", "/api/auth/refresh")
-                .uri("http://localhost:8085"))
-            // Movie Service Routes (with JWT validation)
-            .route("movie-service", r -> r
+            // Auth Service Routes (no JWT validation)
+            .route("auth-service", r -> r
+                .path("/api/auth/**")
+                .uri("http://localhost:8085")
+            )
+            
+            // Public Movie Routes (no JWT validation)
+            .route("movie-public", r -> r
+                .path("/api/movies/public/**")
+                .uri("http://localhost:8083")
+            )
+            
+            // Protected Movie Routes (with JWT validation)
+            .route("movie-protected", r -> r
                 .path("/api/movies/**")
-                .uri("http://localhost:8083"))
+                .filters(f -> f.filter(jwtFilter.apply(
+                    createJwtConfig(Arrays.asList()) // No public endpoints for this route
+                )))
+                .uri("http://localhost:8083")
+            )
+            
+            // Actuator endpoints
             .route("actuator", r -> r
                 .path("/actuator/**")
                 .uri("http://localhost:8081")
-            ).build();
+            )
+            .build();
     }
     
     private JwtFilter.Config createJwtConfig(java.util.List<String> publicEndpoints) {
