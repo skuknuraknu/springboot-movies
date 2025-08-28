@@ -2,34 +2,26 @@ package com.gugugaga.auth.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import com.gugugaga.auth.dto.AssignRoleRequest;
 import com.gugugaga.auth.dto.CreateUserRequest;
 import com.gugugaga.auth.dto.UpdateUserRequest;
-import com.gugugaga.auth.entity.Role;
 import com.gugugaga.auth.entity.User;
-import com.gugugaga.auth.entity.UserRole;
 import com.gugugaga.auth.mapper.UserMapper;
 import com.gugugaga.auth.repository.RoleRepository;
 import com.gugugaga.auth.repository.UserRepository;
+import com.gugugaga.auth.security.CustomUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import jakarta.transaction.Transactional;
 
 @Service
@@ -100,8 +92,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Use the repository method that fetches roles eagerly
-        User user = userRepository.findByUsernameWithRoles(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        User user = userRepository.findByUsernameWithRoles(username).orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         // Convert roles to authorities
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
@@ -114,12 +105,21 @@ public class UserService implements UserDetailsService {
         }
         
         System.out.println("Loaded authorities for " + username + ": " + authorities);
-
-        return new org.springframework.security.core.userdetails.User(
-            user.getUsername(),
-            user.getPassword(),
-            authorities
-        );
+        return new CustomUserDetails(user.getId(), user.getUsername(), user.getPassword(), authorities);
+        // return new org.springframework.security.core.userdetails.User(
+        //     user.getUsername(),
+        //     user.getPassword(),
+        //     authorities
+        // );
+    }
+    public User getCurrentUser() {
+        // Get the currently authenticated user from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("User is not authenticated");
+        }
+        String username = authentication.getName();
+        return findByUsername(username);
     }
     public User findByUsername(String username) {
         return userRepository.findByUsernameIgnoreCase(username)
