@@ -40,6 +40,20 @@ public class JwtUtil {
     private Date extractTokenExp( String token ) {
         return extractClaim(token, Claims::getExpiration);
     }
+    // Add this method to extract user ID from JWT
+    public String extractUserId(String token) {
+        Claims claimsDebug = extractAllClaims(token);
+        Object userIdDebug = claimsDebug.get("userId");
+        // Debug logging
+        System.out.println("🔍 JWT Claims Debug:");
+        System.out.println("  - All claims: " + claimsDebug);
+        System.out.println("  - UserId claim: " + userIdDebug);
+        System.out.println("  - UserId type: " + (userIdDebug != null ? userIdDebug.getClass() : "null"));
+        return extractClaim(token, claims -> {
+            Object userId = claims.get("userId");
+            return userId != null ? userId.toString() : null;
+        });
+    }
     private <T> T extractClaim( String token, Function<Claims, T> claimFunction ) {
         final Claims claim = extractAllClaims(token);
         return claimFunction.apply(claim);
