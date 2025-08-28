@@ -1,4 +1,5 @@
 package com.gugugaga.movie.service;
+import com.gugugaga.movie.dto.CreateMovieRequest;
 import com.gugugaga.movie.entity.Movie;
 import com.gugugaga.movie.repository.MovieRepository;
 import jakarta.persistence.EntityNotFoundException;
