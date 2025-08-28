@@ -21,7 +21,15 @@ public class MovieService {
     public Optional<Movie> getMovieById(Long id) {
         return movieRepository.findById(id);
     }
-    public Movie createMovie(Movie movie) {
+    public Movie createMovie(CreateMovieRequest req) {
+        Movie movie = new Movie();
+        movie.setTitle(req.getTitle());
+        movie.setVideoFileName(req.getVideoFileName());
+        movie.setThumbnail(req.getThumbnail());
+        movie.setGenre(req.getGenre());
+        movie.setReleaseYear(req.getReleaseYear());
+        movie.setRating(req.getRating());
+        movie.setIsDeleted(false);
         return movieRepository.save(movie);
     }
     public void deleteMovie(Long id) {
