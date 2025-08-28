@@ -3,13 +3,32 @@ spring:
     web-application-type: reactive
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: 
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - HEAD
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Content-Length
+              - Content-Range
+              - Accept-Ranges
+              - Content-Type
+              - Authorization
+            allowCredentials: false
       routes:
         - id: movie-service
-          uri: http://localhost:8083
+          uri: http://localhost:8085
           predicates:
             - Path=/api/movies/**
         - id: auth-service
-          uri: http://localhost:8085
+          uri: http://localhost:8084
           predicates:
             - Path=/api/auth/**
 # JWT Configuration (same secret as auth-service)
