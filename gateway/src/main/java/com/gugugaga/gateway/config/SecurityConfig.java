@@ -23,22 +23,15 @@ public class SecurityConfig {
             // Auth Service Routes (no JWT validation)
             .route("auth-service", r -> r
                 .path("/api/auth/**")
-                .uri("http://localhost:8085")
+                .uri("http://localhost:8084")
             )
-            
-            // Public Movie Routes (no JWT validation)
-            .route("movie-public", r -> r
-                .path("/api/movies/public/**")
-                .uri("http://localhost:8083")
-            )
-            
             // Protected Movie Routes (with JWT validation)
             .route("movie-protected", r -> r
                 .path("/api/movies/**")
                 .filters(f -> f.filter(jwtFilter.apply(
                     createJwtConfig(Arrays.asList()) // No public endpoints for this route
                 )))
-                .uri("http://localhost:8083")
+                .uri("http://localhost:8085")
             )
             
             // Actuator endpoints
