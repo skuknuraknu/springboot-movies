@@ -12,23 +12,18 @@ public class Movie {
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private long id;
 
-    @NotBlank(message = "Harap memasukkan title")
     private String title;
-    
+
     @Column(name = "video_file_name")
     private String videoFileName;
 
     @Column(name = "thumbnail")
     private String thumbnail;
 
-    @NotBlank(message = "Harap memasukkan genre")
     private String genre;
 
-    @NotNull(message = "Harap memasukkan tahun rilis")
     private int releaseYear;
 
-    @DecimalMin(value = "0.0", inclusive = true, message = "Rating cannot be less than 0.0")
-    @DecimalMax(value = "10.0", inclusive = true, message = "Rating cannot be more than 10.0")
     private Double rating;
 
     private Boolean isDeleted = false;
