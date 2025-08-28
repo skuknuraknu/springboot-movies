@@ -33,6 +33,7 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             String path = exchange.getRequest().getPath().value();
+            System.out.println("🔍 JWT Filter called for path: " + path); // Add this log
             // Skip JWT validation for public endpoints
             if (isPublicEndpoint(path, config.getPublicEndpoints())) {
                 return chain.filter(exchange);
@@ -49,10 +50,14 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
                 
                 if (jwtUtil.validateToken(token)) {
                     String username = jwtUtil.extractUsername(token);
+                    String userId = jwtUtil.extractUserId(token);
                     
                     // Add user info to headers for downstream services
                     ServerWebExchange modifiedExchange = exchange.mutate()
-                        .request(r -> r.header("X-User-Id", username))
+                        .request(r -> r
+                            .header("X-Username", username)
+                            .header("X-User-Id", userId != null ? userId : "")
+                        )
                         .build();
                     
                     return chain.filter(modifiedExchange);
