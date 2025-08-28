@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import com.gugugaga.auth.entity.RefreshToken;
+import com.gugugaga.auth.security.CustomUserDetails;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -43,7 +44,13 @@ public class JwtUtil {
     // Keep your existing working generateToken method unchanged
     public String generateToken( UserDetails userDetails ) {
         System.out.println("Generating token for user: " + userDetails.getUsername());
-        String token = Jwts.builder()
+        Map<String, Object> claims = new HashMap<>();
+        if ( userDetails instanceof CustomUserDetails ) {
+            CustomUserDetails customDetails = (CustomUserDetails) userDetails;
+            claims.put("userId", customDetails.getUserId());
+            System.out.println("Adding userId to token: " + customDetails.getUserId());
+        }
+        String token = Jwts.builder().claims(claims)
             .subject(userDetails.getUsername())
             .issuedAt( new Date() )
             .expiration(new Date( System.currentTimeMillis() + EXP_TIME))
