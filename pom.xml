@@ -114,6 +114,11 @@
         <artifactId>spring-boot-starter-security</artifactId>
         <version>3.5.5</version>
     </dependency>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.38</version>
+    </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
