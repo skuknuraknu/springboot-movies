@@ -14,6 +14,12 @@ public class Movie {
 
     @NotBlank(message = "Harap memasukkan title")
     private String title;
+    
+    @Column(name = "video_file_name")
+    private String videoFileName;
+
+    @Column(name = "thumbnail")
+    private String thumbnail;
 
     @NotBlank(message = "Harap memasukkan genre")
     private String genre;
@@ -79,5 +85,29 @@ public class Movie {
 
     public void setRating(Double rating) {
         this.rating = rating;
+    }
+
+    public String getVideoFileName() {
+        return videoFileName;
+    }
+
+    public void setVideoFileName(String videoFileName) {
+        this.videoFileName = videoFileName;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 }
