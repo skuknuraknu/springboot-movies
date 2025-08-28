@@ -1,4 +1,5 @@
 package com.gugugaga.movie.controller;
+import com.gugugaga.movie.dto.CreateMovieRequest;
 import com.gugugaga.movie.entity.Movie;
 import com.gugugaga.movie.entity.VideoInfo;
 import com.gugugaga.movie.service.MovieService;
@@ -82,7 +83,7 @@ public class MovieController {
         }
     }
     @PostMapping
-    public ResponseEntity<?> createMovie(@Valid @RequestBody Movie movie) {
+    public ResponseEntity<?> createMovie(@Valid @RequestBody CreateMovieRequest movie) {
         try {
             Movie savedMovie = movieService.createMovie(movie);
             URI location = URI.create("/api/movies" + savedMovie.getId());
