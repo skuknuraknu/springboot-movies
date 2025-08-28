@@ -23,4 +23,13 @@ public class GlobalExceptionHandler {
                 ValidationErrorResponse errorResponse = new ValidationErrorResponse(500, "Validation failed", path, errors, false);
                 return ResponseEntity.badRequest().body(errorResponse);
         }
+        @ExceptionHandler(VideoNotFoundException.class)
+        public ResponseEntity<?> handleVideoNotFound(VideoNotFoundException ex, HttpServletRequest request) {
+                String path = request.getRequestURI();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "success", false,
+                        "message", ex.getMessage(),
+                        "path", path
+                ));
+        }
 }
