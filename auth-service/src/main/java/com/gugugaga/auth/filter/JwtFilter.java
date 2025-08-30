@@ -33,6 +33,25 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * JWT Authentication Filter
+ * 
+ * This filter runs on EVERY HTTP request to check for valid JWT tokens.
+ * It extends OncePerRequestFilter to ensure it runs only once per request.
+ * 
+ * Flow:
+ * 1. Check if request has "Authorization: Bearer <token>" header
+ * 2. Extract and validate the JWT token
+ * 3. If valid, set the user as authenticated in Spring Security context
+ * 4. If invalid/missing, return 401 Unauthorized for protected endpoints
+ * 
+ * Public endpoints (login, register) are excluded via shouldNotFilter() method.
+ * 
+ * Key concepts:
+ * - SecurityContextHolder: Stores current user's authentication info
+ * - OncePerRequestFilter: Ensures filter runs exactly once per request
+ * - Filter Chain: Passes request to next filter if authentication succeeds
+ */
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -122,6 +141,11 @@ public class JwtFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path   = request.getServletPath();
         String method = request.getMethod();
+
+        // Check subscription paths (wildcard pattern)
+        if (path.startsWith("/api/auth/subscription")) {
+            return true;
+        }
 
         return PUBLIC_ENDPOINTS.containsKey(path) && PUBLIC_ENDPOINTS.get(path).contains(method);
     }
