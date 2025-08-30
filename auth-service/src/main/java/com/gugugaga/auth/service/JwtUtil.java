@@ -21,27 +21,66 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+/**
+ * JWT (JSON Web Token) Utility Class
+ * 
+ * This class handles all JWT operations including:
+ * - Token generation (access and refresh tokens)
+ * - Token validation and verification
+ * - Extracting information from tokens (username, expiration, custom claims)
+ * 
+ * JWT Structure: header.payload.signature
+ * - Header: Contains token type and signing algorithm
+ * - Payload: Contains claims (user info, expiration, custom data)
+ * - Signature: Ensures token hasn't been tampered with
+ * 
+ * Security Note: The secret key should be at least 256 bits for HS256 algorithm
+ */
 @Component
 public class JwtUtil {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    // Use a stronger, longer secret key
+    // SECRET KEY CONFIGURATION
+    // Base64 encoded secret key for JWT signing - MUST be at least 256 bits for HS256
+    // In production, this should be loaded from environment variables or secure configuration
+    // Example: @Value("${jwt.secret}") private String SECRET_KEY;
     private final String SECRET_KEY = "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkw";
-    private final long EXP_TIME = 1000 * 60 * 60; // 1 hour
-    private final long accessTokenExpiration = 1000 * 60 * 60; // 1 hour
-    private final long refreshTokenExpiration = 1000 * 60 * 60 * 24 * 7; // 7 days
+    
+    // TOKEN EXPIRATION TIMES
+    // All times are in milliseconds
+    private final long EXP_TIME = 1000 * 60 * 60; // 1 hour = 3,600,000 milliseconds
+    private final long accessTokenExpiration = 1000 * 60 * 60; // 1 hour for access tokens
+    private final long refreshTokenExpiration = 1000 * 60 * 60 * 24 * 7; // 7 days for refresh tokens
 
+    /**
+     * Generate Access Token - Public method for creating access tokens
+     * Access tokens are short-lived (1 hour) and used for API authentication
+     */
     public String generateAccessToken(UserDetails userDetails) {
         return generateToken(userDetails);
     }
 
+    /**
+     * Generate Access Token from Refresh Token
+     * When a refresh token is used, this creates a new access token
+     * This is part of the token refresh flow to maintain user sessions
+     */
     public String generateAccessTokenFromRefreshToken(RefreshToken refreshToken) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(refreshToken.getUser().getUsername());
         return generateAccessToken(userDetails);
     }
     
-    // Keep your existing working generateToken method unchanged
+    /**
+     * Core Token Generation Method
+     * This is the main method that creates JWT tokens with user information
+     * 
+     * Process:
+     * 1. Create claims map to store custom user data
+     * 2. Add userId to claims if using CustomUserDetails
+     * 3. Build JWT with claims, subject (username), issue time, and expiration
+     * 4. Sign the token with our secret key
+     */
     public String generateToken( UserDetails userDetails ) {
         System.out.println("Generating token for user: " + userDetails.getUsername());
         Map<String, Object> claims = new HashMap<>();
