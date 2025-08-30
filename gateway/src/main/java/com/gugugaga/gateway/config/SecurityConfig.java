@@ -20,17 +20,25 @@ public class SecurityConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-            // Auth Service Routes (no JWT validation)
+            // Auth Service Routes (with JWT validation, excluding subscription)
             .route("auth-service", r -> r
                 .path("/api/auth/**")
+                .filters( f -> f.filter( jwtFilter.apply(
+                    createJwtConfig(Arrays.asList(
+                        "/api/auth/login",
+                        "/api/auth/register", 
+                        "/api/auth/refresh",
+                        "/api/auth/subscription/**"
+                    ))
+                )))
                 .uri("http://localhost:8084")
             )
-            // Protected Movie Routes (with JWT validation)
-            .route("movie-protected", r -> r
+            // Protected Movie Routes (with JWT validation - bypassed for dev)
+            .route("movie-service", r -> r
                 .path("/api/movies/**")
-                .filters(f -> f.filter(jwtFilter.apply(
-                    createJwtConfig(Arrays.asList()) // No public endpoints for this route
-                )))
+                // .filters(f -> f.filter(jwtFilter.apply(
+                //     createJwtConfig(Arrays.asList("/api/movies/**")) // Add movies as public endpoint for dev
+                // )))
                 .uri("http://localhost:8085")
             )
             
