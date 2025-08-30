@@ -75,7 +75,15 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
         if (publicEndpoints == null) {
             return false;
         }
-        return publicEndpoints.stream().anyMatch(path::startsWith);
+          return publicEndpoints.stream().anyMatch(publicPath -> {
+            // Handle wildcard patterns like /api/auth/subscription/**
+            if (publicPath.endsWith("/**")) {
+                String basePattern = publicPath.substring(0, publicPath.length() - 3);
+                return path.startsWith(basePattern);
+            }
+            // Handle exact matches
+            return path.equals(publicPath);
+        });
     }
     
     private Mono<Void> sendErrorResponse(ServerWebExchange exchange, String message, String errorCode) {
