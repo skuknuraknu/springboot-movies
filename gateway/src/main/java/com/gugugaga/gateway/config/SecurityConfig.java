@@ -1,20 +1,23 @@
 package com.gugugaga.gateway.config;
 
 import com.gugugaga.gateway.filter.JwtFilter;
+
+import java.util.Arrays;
+
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
-
 @Configuration
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final ServiceConfiguration serviceConfig;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, ServiceConfiguration serviceConfig) {
         this.jwtFilter = jwtFilter;
+        this.serviceConfig = serviceConfig;
     }
     
     @Bean
@@ -24,28 +27,24 @@ public class SecurityConfig {
             .route("auth-service", r -> r
                 .path("/api/auth/**")
                 .filters( f -> f.filter( jwtFilter.apply(
-                    createJwtConfig(Arrays.asList(
-                        "/api/auth/login",
-                        "/api/auth/register", 
-                        "/api/auth/refresh",
-                        "/api/auth/subscription/**"
-                    ))
+                    createJwtConfig(serviceConfig.getSecurity().getPublicEndpoints())
                 )))
-                .uri("http://localhost:8084")
+                .uri(serviceConfig.getUrls().getAuthService())
             )
             // Protected Movie Routes (with JWT validation - bypassed for dev)
             .route("movie-service", r -> r
                 .path("/api/movies/**")
-                // .filters(f -> f.filter(jwtFilter.apply(
-                //     createJwtConfig(Arrays.asList("/api/movies/**")) // Add movies as public endpoint for dev
-                // )))
-                .uri("http://localhost:8085")
+                .filters(f -> f.filter(jwtFilter.apply(
+                    // createJwtConfig(Arrays.asList("/api/movies/**")) // Add movies as public endpoint for dev
+                    createJwtConfig(serviceConfig.getSecurity().getPublicEndpoints())
+                )))
+                .uri(serviceConfig.getUrls().getMovieService())
             )
             
             // Actuator endpoints
             .route("actuator", r -> r
                 .path("/actuator/**")
-                .uri("http://localhost:8081")
+                .uri(serviceConfig.getUrls().getActuatorService())
             )
             .build();
     }
