@@ -2,12 +2,14 @@ package com.gugugaga.gateway.filter;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.gugugaga.gateway.config.ServiceConfiguration;
 import com.gugugaga.gateway.service.UserPlanService;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -23,20 +25,20 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class RateLimiterFilter implements GlobalFilter, Ordered {
+    private static final Logger log = LoggerFactory.getLogger(RateLimiterFilter.class);
+    private final Cache<String, Bucket> bucketCache;
     private final UserPlanService userPlanService;
-    public RateLimiterFilter( UserPlanService userPlanService ) {
+    private final ServiceConfiguration serviceConfig;
+    
+    public RateLimiterFilter(UserPlanService userPlanService, ServiceConfiguration serviceConfig) {
         this.userPlanService = userPlanService;
+        this.serviceConfig = serviceConfig;
+            // Remembers each user's bucket
+        this.bucketCache = Caffeine.newBuilder()
+                .expireAfterWrite(serviceConfig.getRateLimiting().getCache().getExpireAfterWriteHours(), TimeUnit.HOURS)
+                .maximumSize(serviceConfig.getRateLimiting().getCache().getMaximumSize())
+                .build();
     }
-    private static final Map<String, Bandwidth> SERVICE_LIMITS = Map.of(
-        "auth",   Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1))),
-        "movies", Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1)))
-    );
-
-    // Remembers each user's bucket
-    private final Cache<String, Bucket> bucketCache = Caffeine.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)  // Forget unused buckets after 1 hour
-            .maximumSize(10000)  // Store max 10,000 buckets
-            .build();
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -44,9 +46,13 @@ public class RateLimiterFilter implements GlobalFilter, Ordered {
         String ip = getClientIP(exchange);
         String userId = getCliendId(exchange);
         
+        // INFO: Log each request being processed
+        log.info("🔍 Processing user request - User: {}, Service: {}, Path: {}, IP: {}", 
+                exchange.getRequest().getHeaders().get("X-User-Id"), getServiceName(path), path, ip);
+
         String key = userId + ":" + getServiceName(path);
-        System.out.println(" - Set bucket key: " + key);
-        return userPlanService.getUserRateLimit(userId).flatMap( res -> {
+        return userPlanService.getUserRateLimit(userId).flatMap( res -> {   
+            System.out.println(res);
             String cacheKey = key;
             Bucket bucket = getBucket(cacheKey, res);
             // Try to consume 1 token (1 API request)
@@ -61,13 +67,14 @@ public class RateLimiterFilter implements GlobalFilter, Ordered {
                     exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
                     exchange.getResponse().getHeaders().add("X-Rate-Limit-Limit", String.valueOf(res));
                     exchange.getResponse().getHeaders().add("X-Rate-Limit-Remaining", "0");
-                    exchange.getResponse().getHeaders().add("X-Rate-Limit-Retry-After-Seconds", "60");
                     
                     // Business Message: Encourage subscription upgrade
                     String upgradeMessage = res <= 10 ? 
-                        "Rate limit exceeded. Upgrade to Premium for higher limits!" :
-                        "Rate limit exceeded. Please try again in 1 minute.";
+                        serviceConfig.getRateLimiting().getMessages().getUpgradeMessageBasic() :
+                        serviceConfig.getRateLimiting().getMessages().getUpgradeMessagePremium();
                     exchange.getResponse().getHeaders().add("X-Rate-Limit-Message", upgradeMessage);
+                    exchange.getResponse().getHeaders().add("X-Rate-Limit-Retry-After-Seconds", 
+                        String.valueOf(serviceConfig.getRateLimiting().getMessages().getRetryAfterSeconds()));
                     return exchange.getResponse().setComplete();
                 }
         });
@@ -96,8 +103,19 @@ public class RateLimiterFilter implements GlobalFilter, Ordered {
     }
 
     private Bucket createNewBucketForServices( String service ) {
-        Bandwidth limit = SERVICE_LIMITS.getOrDefault(service, Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(1))) );
-        return Bucket.builder().addLimit(limit).build();
+        int limit;
+        switch (service) {
+            case "auth":
+                limit = serviceConfig.getRateLimiting().getServiceLimits().getAuthRequestsPerMinute();
+                break;
+            case "movies":
+                limit = serviceConfig.getRateLimiting().getServiceLimits().getMovieRequestsPerMinute();
+                break;
+            default:
+                limit = serviceConfig.getRateLimiting().getServiceLimits().getDefaultRequestsPerMinute();
+        }
+        Bandwidth bandwidth = Bandwidth.classic(limit, Refill.intervally(limit, Duration.ofMinutes(1)));
+        return Bucket.builder().addLimit(bandwidth).build();
     }
     private String getClientIP(ServerWebExchange exchange) {
         // Get the client's IP address
