@@ -20,8 +20,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      * - Joins with Plan table to get max_request limit for rate limiting
      */
     @Query("SELECT s FROM Subscription s JOIN FETCH s.plan p WHERE s.user.id = :userId AND s.status = 'ACTIVE' AND (s.endDate IS NULL OR s.endDate >= :currentDate)")
-    Optional<Subscription> findActiveSubscriptionByUserId(@Param("userId") Long userId, 
-                                                          @Param("currentDate") LocalDate currentDate);
+    Optional<Subscription> findActiveSubscriptionByUserId(@Param("userId") Long userId, @Param("currentDate") LocalDate currentDate);
 }
 
 
