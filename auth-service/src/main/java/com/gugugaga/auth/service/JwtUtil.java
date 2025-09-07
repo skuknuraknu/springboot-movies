@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
+import com.gugugaga.auth.config.AuthConfiguration;
 import com.gugugaga.auth.entity.RefreshToken;
 import com.gugugaga.auth.security.CustomUserDetails;
 
@@ -40,18 +41,12 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtil {
     @Autowired
     private UserDetailsService userDetailsService;
-
-    // SECRET KEY CONFIGURATION
-    // Base64 encoded secret key for JWT signing - MUST be at least 256 bits for HS256
-    // In production, this should be loaded from environment variables or secure configuration
-    // Example: @Value("${jwt.secret}") private String SECRET_KEY;
-    private final String SECRET_KEY = "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkw";
     
-    // TOKEN EXPIRATION TIMES
-    // All times are in milliseconds
-    private final long EXP_TIME = 1000 * 60 * 60; // 1 hour = 3,600,000 milliseconds
-    private final long accessTokenExpiration = 1000 * 60 * 60; // 1 hour for access tokens
-    private final long refreshTokenExpiration = 1000 * 60 * 60 * 24 * 7; // 7 days for refresh tokens
+    private final AuthConfiguration authConfig;
+
+    public JwtUtil(AuthConfiguration authConfig) {
+        this.authConfig = authConfig;
+    }
 
     /**
      * Generate Access Token - Public method for creating access tokens
@@ -82,7 +77,7 @@ public class JwtUtil {
      * 4. Sign the token with our secret key
      */
     public String generateToken( UserDetails userDetails ) {
-        System.out.println("Generating token for user: " + userDetails.getUsername());
+        System.out.println(authConfig.getMessages().getTokenGenerationPrefix() + userDetails.getUsername());
         Map<String, Object> claims = new HashMap<>();
         if ( userDetails instanceof CustomUserDetails ) {
             CustomUserDetails customDetails = (CustomUserDetails) userDetails;
@@ -92,7 +87,7 @@ public class JwtUtil {
         String token = Jwts.builder().claims(claims)
             .subject(userDetails.getUsername())
             .issuedAt( new Date() )
-            .expiration(new Date( System.currentTimeMillis() + EXP_TIME))
+            .expiration(new Date( System.currentTimeMillis() + authConfig.getJwt().getAccessTokenExpirationMs()))
             .signWith(getSigningKey())
             .compact();
         System.out.println("Generated token: " + token);
@@ -104,7 +99,9 @@ public class JwtUtil {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", tokenType);
-        return createToken(claims, username, "ACCESS".equals(tokenType) ? accessTokenExpiration : refreshTokenExpiration);
+        return createToken(claims, username, "ACCESS".equals(tokenType) ? 
+            authConfig.getJwt().getAccessTokenExpirationMs() : 
+            authConfig.getJwt().getRefreshTokenExpirationMs());
     }
     
     // Add the createToken method that supports claims and custom expiration
@@ -141,10 +138,10 @@ public class JwtUtil {
             System.out.println("Validating token for user: " + userDetails.getUsername());
             final String username = extractUsername(token);
             boolean isValid = ( username.equals(userDetails.getUsername()) && !isTokenExpired(token) );
-            System.out.println("Token validation result: " + isValid);
+            System.out.println(authConfig.getMessages().getTokenValidationSuccess() + isValid);
             return isValid;
         } catch (Exception e) {
-            System.err.println("Error validating token: " + e.getMessage());
+            System.err.println(authConfig.getMessages().getTokenValidationError() + e.getMessage());
             return false;
         }
     }
@@ -160,7 +157,7 @@ public class JwtUtil {
             System.out.println("Token validation with type result: " + isValid);
             return isValid;
         } catch (Exception e) {
-            System.err.println("Error validating token with type: " + e.getMessage());
+            System.err.println(authConfig.getMessages().getTokenValidationError() + e.getMessage());
             return false;
         }
     }
@@ -187,14 +184,15 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload();
         } catch (Exception e) {
-            System.err.println("Error parsing token: " + e.getMessage());
-            System.err.println("Secret key being used: " + SECRET_KEY.substring(0, 10) + "...");
+            System.err.println(authConfig.getMessages().getTokenParsingError() + e.getMessage());
+            System.err.println(authConfig.getMessages().getSecretKeyDebugPrefix() + 
+                authConfig.getJwt().getSecretKey().substring(0, 10) + "...");
             throw e;
         }
     }
     
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(authConfig.getJwt().getSecretKey());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
